@@ -25,7 +25,7 @@
 
 (deftest namespace-loads
   (testing "the restored CLJC namespace loads"
-    (is (some? (the-ns 'vegetation)))))
+    (is (some? (find-ns 'vegetation)))))
 
 ;; ---------------------------------------------------------------------
 ;; taxonomy.rs
