@@ -1,5 +1,16 @@
 # kotoba-lang/vegetation
 
+`src/vegetation_golden.kotoba` is the policy-v7 safety qualification slice
+for distance-based LOD, XZ distance, patch-range rejection, and scalar biome
+placement eligibility. The test suite compares the existing CLJC domain
+behavior with the Kotoba reference executor, restricted JavaScript, and typed
+Wasm without host capabilities.
+
+General instance collections, sorting, patch construction, mesh generation,
+and GPU instance buffers remain CLJC until Kotoba has a structured f64
+collection ABI. Deterministic scatter placement also remains an oracle until
+the xorshift32 wrapping/shift profile is qualified.
+
 Zero-dep portable `.cljc` — restored from the legacy `kami-vegetation` Rust crate
 (`kotoba-lang/kami-engine`, deleted in PR #82 "Remove Rust workspace from kami-engine")
 as part of the **clj-wgsl migration** (ADR-2607010930, `com-junkawasaki/root`).
