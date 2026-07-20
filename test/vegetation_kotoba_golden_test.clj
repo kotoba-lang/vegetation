@@ -2,12 +2,14 @@
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.data.json :as json]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is]]
             [kotoba.compiler.core :as compiler]
             [kotoba.compiler.ir :as ir]
             [vegetation.cull :as cull]
             [vegetation.instance :as instance]
-            [vegetation.lod :as lod]))
+            [vegetation.lod :as lod]
+            [vegetation.placement :as placement]))
 
 (defn- lod-code [tier]
   (double ({:detail 0 :billboard 1 :culled 2} tier)))
@@ -80,3 +82,38 @@
     (is (= :kotoba.floating-point/ieee-754-f32-f64-v7
            (:floating-point-policy js-artifact)))
     (is (= #{} (set (:effects (:kir js-artifact)))))))
+
+(deftest deterministic-xorshift-agrees-with-cljc-across-targets
+  (let [source (slurp "src/vegetation_golden.kotoba")
+        seeds [0 1 -1 2147483648 4294967295 4294967296
+               -9223372036854775808 9223372036854775807]
+        expected-new (mapv placement/rng-new seeds)
+        expected-next (mapv (fn [seed] (first (placement/rng-next-u32 seed))) expected-new)
+        expected-f64 (mapv (fn [seed] (first (placement/rng-next-f32 seed))) expected-new)
+        js-artifact (compiler/compile-source source :js-kotoba-v1)
+        wasm-artifact (compiler/compile-source source :wasm32-browser-kotoba-v1)
+        kir (:kir js-artifact)
+        reference-new (mapv #(ir/execute kir 'rng-new [%]) seeds)
+        reference-next (mapv #(ir/execute kir 'rng-next-u32 [%]) expected-new)
+        reference-f64 (mapv #(ir/execute kir 'rng-next-f64 [%]) expected-new)
+        js64 (.encodeToString (java.util.Base64/getEncoder)
+                              (.getBytes ^String (:source js-artifact) "UTF-8"))
+        wasm64 (.encodeToString (java.util.Base64/getEncoder) (:bytes wasm-artifact))
+        seeds-js (str "[" (str/join "," (map #(str % "n") seeds)) "]")
+        next-js (str "[" (str/join "," (map #(str % "n") expected-next)) "]")
+        f64-js (str "[" (str/join "," (map #(Double/toString (double %)) expected-f64)) "]")
+        compiler-source (java.io.File. (.toURI (io/resource "kotoba/compiler/core.clj")))
+        compiler-root (nth (iterate #(.getParentFile ^java.io.File %) compiler-source) 4)
+        runtime-uri (str (.toURI (java.io.File. compiler-root "runtime/browser-host.mjs")))
+        script (str "const seeds=" seeds-js ",next=" next-js ",floats=" f64-js ";"
+                    "Promise.all([import('data:text/javascript;base64," js64 "'),import('" runtime-uri "')])"
+                    ".then(async ([j,host])=>{const a=j.instantiateKotoba({}),h=await host.instantiateKotoba(Buffer.from('" wasm64 "','base64')),b=h.instance.exports;"
+                    "for(let i=0;i<seeds.length;i++){const s=a['rng-new'](seeds[i]),w=b['rng-new'](seeds[i]);"
+                    "if(s!==w||a['rng-next-u32'](s)!==next[i]||b['rng-next-u32'](w)!==next[i])process.exit(2);"
+                    "const af=a['rng-next-f64'](s),bf=b['rng-next-f64'](w);if(!Object.is(af,bf)||Math.abs(af-floats[i])>1e-15)process.exit(3)}})"
+                    ".catch(e=>{console.error(e);process.exit(99)})")
+        result (shell/sh "node" "--input-type=module" "-e" script)]
+    (is (= expected-new reference-new))
+    (is (= expected-next reference-next))
+    (is (= expected-f64 reference-f64))
+    (is (zero? (:exit result)) (:err result))))
