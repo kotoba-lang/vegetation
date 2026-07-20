@@ -1,8 +1,20 @@
 (ns vegetation-golden
   (:export [main grass-lod-code palm-lod-code xz-distance patch-in-range-code
-            placement-eligible-code]))
+            placement-eligible-code rng-new rng-next-u32 rng-next-f64]))
 
 (defn main [] :i64 0)
+
+(defn rng-new [seed :i64] :i64
+  (let [wrapped (u32-wrap seed)]
+    (if (= wrapped 0) 1 wrapped)))
+
+(defn rng-next-u32 [state :i64] :i64
+  (xorshift32 state))
+
+(defn rng-next-f64 [state :i64] :f64
+  (let [next-state (xorshift32 state)
+        positive (bit-and next-state 2147483647)]
+    (f64-div (i64-to-f64-checked positive) 2147483647.0)))
 
 (defn grass-lod-code [distance :f64] :f64
   (if (f64-lt distance 25.0)
