@@ -1,6 +1,6 @@
 {:paths ["src" "test"]
- :deps {io.github.kotoba-lang/compiler
-        {:git/url "https://github.com/kotoba-lang/compiler.git"
+ :deps {io.github.kotoba-lang/amu
+        {:git/url "https://github.com/kotoba-lang/amu.git"
          :git/sha "24b304f670a027a2ff34c33b55ed33d46b75259c"}}
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {io.github.cognitect-labs/test-runner
