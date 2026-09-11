@@ -50,5 +50,5 @@ Poisson-disk minimum-separation coverage test) — **25 tests / 180,986 assertio
 ## Develop
 
 ```bash
-clojure -M:test
+kbb -M:test
 ```
