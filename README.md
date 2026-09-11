@@ -43,7 +43,7 @@ CLJC heightmap/splatmap shape (`{:width :depth :sample (fn [hx hz]) :normal (fn 
 ## Status
 
 Restoration complete. All original Rust `#[test]`s ported 1:1 to
-`test/vegetation_test.cljc` (plus the namespace-loads smoke test and one extra
+`test/vegetation_test.cljk` (plus the namespace-loads smoke test and one extra
 Poisson-disk minimum-separation coverage test) — **25 tests / 180,986 assertions,
 0 failures, 0 errors**.
 
