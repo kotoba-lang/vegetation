@@ -3,7 +3,7 @@
             [clojure.java.shell :as shell]
             [clojure.data.json :as json]
             [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is]]
+            [kotoba.test :refer [deftest is]]
             [kotoba.compiler.core :as compiler]
             [kotoba.compiler.ir :as ir]
             [vegetation.cull :as cull]
