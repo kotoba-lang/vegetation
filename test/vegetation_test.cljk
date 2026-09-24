@@ -6,7 +6,7 @@
   placement}.rs`, kotoba-lang/kami-engine, deleted in PR #82) 1:1 to
   `clojure.test` deftest/is, plus the pre-existing namespace-loads smoke
   test."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [vegetation]
             [vegetation.taxonomy :as taxonomy]
             [vegetation.species :as species]
