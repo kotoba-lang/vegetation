@@ -1,6 +1,6 @@
 (ns vegetation-kotoba-golden-test
-  (:require [clojure.java.io :as io]
-            [clojure.java.shell :as shell]
+  (:require [kotoba.bytes :as kbytes] [clojure.java.io :as io]
+            [kotoba.process :as shell]
             [clojure.data.json :as json]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is]]
@@ -15,8 +15,8 @@
   (double ({:detail 0 :billboard 1 :culled 2} tier)))
 
 (defn- invoke-js [artifact calls]
-  (let [source64 (.encodeToString (java.util.Base64/getEncoder)
-                                  (.getBytes ^String (:source artifact) "UTF-8"))
+  (let [source64 (kbytes/base64-encode
+                                  (kbytes/utf8-bytes ^String (:source artifact)))
         calls-json (json/write-str calls)
         script (str "const calls=" calls-json ";"
                     "import('data:text/javascript;base64," source64 "').then(m=>{"
@@ -28,7 +28,7 @@
     (mapv double (read-string (:out result)))))
 
 (defn- invoke-wasm [artifact calls]
-  (let [wasm64 (.encodeToString (java.util.Base64/getEncoder) (:bytes artifact))
+  (let [wasm64 (kbytes/base64-encode (:bytes artifact))
         compiler-source (java.io.File. (.toURI (io/resource "kotoba/compiler/core.clj")))
         compiler-root (nth (iterate #(.getParentFile ^java.io.File %) compiler-source) 4)
         runtime-uri (str (.toURI (java.io.File. compiler-root "runtime/browser-host.mjs")))
@@ -96,9 +96,9 @@
         reference-new (mapv #(ir/execute kir 'rng-new [%]) seeds)
         reference-next (mapv #(ir/execute kir 'rng-next-u32 [%]) expected-new)
         reference-f64 (mapv #(ir/execute kir 'rng-next-f64 [%]) expected-new)
-        js64 (.encodeToString (java.util.Base64/getEncoder)
-                              (.getBytes ^String (:source js-artifact) "UTF-8"))
-        wasm64 (.encodeToString (java.util.Base64/getEncoder) (:bytes wasm-artifact))
+        js64 (kbytes/base64-encode
+                              (kbytes/utf8-bytes ^String (:source js-artifact)))
+        wasm64 (kbytes/base64-encode (:bytes wasm-artifact))
         seeds-js (str "[" (str/join "," (map #(str % "n") seeds)) "]")
         next-js (str "[" (str/join "," (map #(str % "n") expected-next)) "]")
         f64-js (str "[" (str/join "," (map #(Double/toString (double %)) expected-f64)) "]")
