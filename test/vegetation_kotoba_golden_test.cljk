@@ -1,7 +1,7 @@
 (ns vegetation-kotoba-golden-test
   (:require [kotoba.bytes :as kbytes] [clojure.java.io :as io]
             [kotoba.process :as shell]
-            [clojure.data.json :as json]
+            [kotoba.json :as json]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is]]
             [kotoba.compiler.core :as compiler]
